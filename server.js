@@ -1,54 +1,53 @@
 import express from "express";
-import cors from "cors";
-import pkg from "pg";
+import pg from "pg";
+import dotenv from "dotenv";
 
-const { Pool } = pkg;
+dotenv.config();
+
 const app = express();
+const { Pool } = pg;
 
-app.use(cors());
-app.use(express.json());
-
-// conexão com o Neon
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
-// rota de teste
-app.get("/", async (req, res) => {
+app.use(express.json());
+
+// Rota de teste
+app.get("/api/test", async (req, res) => {
   try {
     const result = await pool.query("SELECT NOW()");
-    res.json({ conectado: true, hora: result.rows[0] });
+    res.json({ success: true, time: result.rows[0] });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro ao conectar no Neon" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// rota para operações
+// Exemplo rota operações
 app.post("/api/operacoes", async (req, res) => {
   try {
     const {
       data, ativo, horario, tempo_vela, compra_venda,
-      payout, trader, entrada1, w_l1, entrada2, w_l2,
-      entrada3, w_l3, periodo, corretora
+      payout, trader, entrada1, w_l1,
+      entrada2, w_l2, entrada3, w_l3,
+      periodo, corretora
     } = req.body;
 
-    const result = await pool.query(
+    await pool.query(
       `INSERT INTO operacoes 
-       (data, ativo, horario, tempo_vela, compra_venda, payout, trader,
+       (data, ativo, horario, tempo_vela, compra_venda, payout, trader, 
         entrada1, w_l1, entrada2, w_l2, entrada3, w_l3, periodo, corretora)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
-       RETURNING *`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
       [data, ativo, horario, tempo_vela, compra_venda, payout, trader,
-       entrada1, w_l1, entrada2, w_l2, entrada3, w_l3, periodo, corretora]
+        entrada1, w_l1, entrada2, w_l2, entrada3, w_l3, periodo, corretora]
     );
 
-    res.json(result.rows[0]);
+    res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro ao inserir operação" });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// rota para caixa
-app.post
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 API rodando na porta ${PORT}`));
