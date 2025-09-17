@@ -112,12 +112,12 @@ app.post("/api/caixa", async (req, res) => {
 // --- Metas ---
 app.post("/api/metas", async (req, res) => {
   try {
-    const { data, meta_valor, periodo } = req.body;
+    const { data, meta_valor } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO metas (data, meta_valor, periodo)
-       VALUES ($1,$2,$3) RETURNING *`,
-      [data, meta_valor, periodo || null]
+      `INSERT INTO metas (data, meta_valor)
+       VALUES ($1, $2) RETURNING *`,
+      [data, meta_valor]
     );
 
     res.json({ success: true, data: result.rows[0] });
