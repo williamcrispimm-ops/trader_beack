@@ -5,6 +5,8 @@ import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import pkg from "pg";
+// Para ambiente de desenvolvimento, você pode usar a biblioteca 'dotenv' para carregar variáveis do .env.
+// import "dotenv/config";
 
 const { Pool } = pkg;
 
@@ -18,21 +20,25 @@ app.use(bodyParser.json());
 // =============================
 // 📌 Conexão com o PostgreSQL (Neon/Supabase)
 // =============================
+// Use process.env.DATABASE_URL para se conectar ao banco de dados.
+// A configuração SSL com rejectUnauthorized: false é necessária para alguns provedores como o Neon.
+// Em um ambiente de produção mais seguro, considere configurar corretamente o certificado SSL.
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
 // =============================
-// 📌 Rotas
+// 📌 Rotas da API
 // =============================
 
-// Teste de status
+// Teste de status da API
 app.get("/api", (req, res) => {
   res.json({ status: "API funcionando 🚀" });
 });
 
-// --- Operações ---
+// --- Rota para operações (inserir dados) ---
+// Recomendação: Para maior segurança, valide os dados do req.body antes de inserir no banco.
 app.post("/api/operacoes", async (req, res) => {
   try {
     const {
@@ -54,9 +60,9 @@ app.post("/api/operacoes", async (req, res) => {
     } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO operacoes 
-      (data, ativo, horario, tempo_vela, compra_venda, payout, trader, 
-       entrada1, w_l1, entrada2, w_l2, entrada3, w_l3, periodo, corretora)
+      `INSERT INTO operacoes
+      (data, ativo, horario, tempo_vela, compra_venda, payout, trader,
+        entrada1, w_l1, entrada2, w_l2, entrada3, w_l3, periodo, corretora)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
       RETURNING *`,
       [
@@ -78,64 +84,65 @@ app.post("/api/operacoes", async (req, res) => {
       ]
     );
 
-    res.json({ success: true, data: result.rows[0] });
+    res.status(201).json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error("❌ Erro ao inserir operação:", err);
-    res.status(500).json({ error: "Erro ao inserir operação" });
+    res.status(500).json({ error: "Erro interno ao processar a requisição." });
   }
 });
 
-// --- Caixa ---
+// --- Rota para caixa (inserir dados) ---
 app.post("/api/caixa", async (req, res) => {
   try {
     const { data, valor, tipo, corretora } = req.body;
 
     const result = await pool.query(
       `INSERT INTO caixa (data, valor, tipo, corretora)
-       VALUES ($1,$2,$3,$4) RETURNING *`,
+      VALUES ($1,$2,$3,$4) RETURNING *`,
       [data, valor, tipo, corretora]
     );
 
-    res.json({ success: true, data: result.rows[0] });
+    res.status(201).json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error("❌ Erro ao inserir caixa:", err);
-    res.status(500).json({ error: "Erro ao inserir movimentação de caixa" });
+    res.status(500).json({ error: "Erro interno ao processar a requisição." });
   }
 });
 
-// --- Metas (insere na tabela metas) ---
+// --- Rota para metas (inserir dados) ---
 app.post("/api/metas", async (req, res) => {
   try {
     const { data, meta_valor, periodo } = req.body;
 
     const result = await pool.query(
       `INSERT INTO metas (data, meta_valor, periodo)
-       VALUES ($1,$2,$3) RETURNING *`,
+      VALUES ($1,$2,$3) RETURNING *`,
       [data, meta_valor, periodo || null]
     );
 
-    res.json({ success: true, data: result.rows[0] });
+    res.status(201).json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error("❌ Erro ao inserir meta:", err);
-    res.status(500).json({ error: "Erro ao inserir meta" });
+    res.status(500).json({ error: "Erro interno ao processar a requisição." });
   }
 });
 
-// --- Consulta acompanhamento de metas (view) ---
+// --- Rota para consulta de acompanhamento de metas (view) ---
 app.get("/api/acompanhamento_meta", async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM acompanhamento_meta ORDER BY data, periodo"
     );
+    // Para conjuntos de dados muito grandes, considere usar paginação para melhorar a performance.
     res.json(result.rows);
   } catch (err) {
     console.error("❌ Erro ao buscar acompanhamento de metas:", err);
-    res.status(500).json({ error: "Erro ao buscar acompanhamento de metas" });
+    res.status(500).json({ error: "Erro interno ao processar a requisição." });
   }
 });
 
 // =============================
-// 📌 Inicialização
+// 📌 Inicialização do servidor
 // =============================
 app.listen(PORT, () => {
   console.log(`✅ Servidor rodando na porta ${PORT}`);
