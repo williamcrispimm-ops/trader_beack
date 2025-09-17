@@ -106,7 +106,6 @@ app.post("/api/caixa", async (req, res) => {
 // --- Metas ---
 app.post("/api/metas", async (req, res) => {
   try {
-    // O front/HTML envia apenas data e meta_valor
     const { data, meta_valor } = req.body;
 
     const result = await pool.query(
