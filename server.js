@@ -33,6 +33,7 @@ app.get("/api", (req, res) => {
 });
 
 // --- Operações ---
+// --- Operações ---
 app.post("/api/operacoes", async (req, res) => {
   try {
     const {
