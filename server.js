@@ -108,10 +108,10 @@ app.post("/api/metas", async (req, res) => {
   try {
     const { data, meta_valor } = req.body;
 
-    // periodo será calculado automaticamente pelo banco (ex: view ou função)
+    // ⚠️ periodo é calculado pelo trigger, não precisa enviar
     const result = await pool.query(
-      `INSERT INTO metas (data, meta_valor, periodo)
-       VALUES ($1,$2,NULL) RETURNING *`,
+      `INSERT INTO metas (data, meta_valor)
+       VALUES ($1,$2) RETURNING *`,
       [data, meta_valor]
     );
 
@@ -121,6 +121,7 @@ app.post("/api/metas", async (req, res) => {
     res.status(500).json({ error: "Erro ao inserir meta" });
   }
 });
+
 
 // =============================
 // 📌 Inicialização
