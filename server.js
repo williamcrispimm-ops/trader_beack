@@ -103,16 +103,15 @@ app.post("/api/caixa", async (req, res) => {
   }
 });
 
-// --- Metas ---
+// --- Metas (insere na tabela metas) ---
 app.post("/api/metas", async (req, res) => {
   try {
-    const { data, meta_valor } = req.body;
+    const { data, meta_valor, periodo } = req.body;
 
-    // ⚠️ periodo é calculado pelo trigger, não precisa enviar
     const result = await pool.query(
-      `INSERT INTO metas (data, meta_valor)
-       VALUES ($1,$2) RETURNING *`,
-      [data, meta_valor]
+      `INSERT INTO metas (data, meta_valor, periodo)
+       VALUES ($1,$2,$3) RETURNING *`,
+      [data, meta_valor, periodo || null]
     );
 
     res.json({ success: true, data: result.rows[0] });
@@ -122,6 +121,18 @@ app.post("/api/metas", async (req, res) => {
   }
 });
 
+// --- Consulta acompanhamento de metas (view) ---
+app.get("/api/acompanhamento_meta", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM acompanhamento_meta ORDER BY data, periodo"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ Erro ao buscar acompanhamento de metas:", err);
+    res.status(500).json({ error: "Erro ao buscar acompanhamento de metas" });
+  }
+});
 
 // =============================
 // 📌 Inicialização
