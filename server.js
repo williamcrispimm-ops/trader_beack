@@ -109,38 +109,34 @@ app.post("/api/caixa", async (req, res) => {
   }
 });
 
-// --- Rota para metas (inserir dados) ---
+// --- Metas ---
 app.post("/api/metas", async (req, res) => {
   try {
     const { data, meta_valor, periodo } = req.body;
 
     const result = await pool.query(
       `INSERT INTO metas (data, meta_valor, periodo)
-      VALUES ($1,$2,$3) RETURNING *`,
+       VALUES ($1,$2,$3) RETURNING *`,
       [data, meta_valor, periodo || null]
     );
 
-    res.status(201).json({ success: true, data: result.rows[0] });
+    res.json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error("❌ Erro ao inserir meta:", err);
-    res.status(500).json({ error: "Erro interno ao processar a requisição." });
+    res.status(500).json({ error: "Erro ao inserir meta" });
   }
 });
 
-// --- Rota para consulta de acompanhamento de metas (view) ---
+// --- Acompanhamento de metas (VIEW, só leitura) ---
 app.get("/api/acompanhamento_meta", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT * FROM acompanhamento_meta ORDER BY data, periodo"
-    );
-    // Para conjuntos de dados muito grandes, considere usar paginação para melhorar a performance.
-    res.json(result.rows);
+    const result = await pool.query("SELECT * FROM acompanhamento_meta ORDER BY data, periodo");
+    res.json({ success: true, data: result.rows });
   } catch (err) {
-    console.error("❌ Erro ao buscar acompanhamento de metas:", err);
-    res.status(500).json({ error: "Erro interno ao processar a requisição." });
+    console.error("❌ Erro ao consultar acompanhamento_meta:", err);
+    res.status(500).json({ error: "Erro ao consultar acompanhamento_meta" });
   }
 });
-
 // =============================
 // 📌 Inicialização do servidor
 // =============================
