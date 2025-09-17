@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Ping Trader-Beack Render</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    #status {
+      font-size: 1.2em;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>⏳ Monitor de Ping — trader-beack.onrender.com</h2>
+  <p id="status">Iniciando...</p>
+
+  <script>
+    const RENDER_URL = "https://trader-beack.onrender.com/health";
+    const INTERVALO_MS = 5 * 60 * 1000; // 5 minutos
+
+    function dentroDoHorario() {
+      const agora = new Date();
+      const hora = agora.getHours();
+      const minuto = agora.getMinutes();
+
+      // Ativo entre 09h00 e 23h00
+      if (hora > 9 && hora < 23) return true;
+      if (hora === 9 && minuto >= 0) return true;
+      if (hora === 23 && minuto === 0) return true;
+
+      return false;
+    }
+
+    async function pingRender() {
+      const statusEl = document.getElementById("status");
+      if (dentroDoHorario()) {
+        try {
+          const resp = await fetch(RENDER_URL);
+          if (resp.ok) {
+            statusEl.textContent = `✅ Ping enviado às ${new Date().toLocaleTimeString()}`;
+          } else {
+            statusEl.textContent = `⚠️ Erro ${resp.status} no ping às ${new Date().toLocaleTimeString()}`;
+          }
+        } catch (err) {
+          statusEl.textContent = `❌ Falha no ping: ${err.message}`;
+        }
+      } else {
+        statusEl.textContent = `⏸️ Pausado (fora do horário) às ${new Date().toLocaleTimeString()}`;
+      }
+    }
+
+    pingRender();
+    setInterval(pingRender, INTERVALO_MS);
+  </script>
+</body>
+</html>
