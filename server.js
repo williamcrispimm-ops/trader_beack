@@ -50,18 +50,18 @@ app.post("/api/operacoes", async (req, res) => {
       entrada3,
       w_l3,
       corretora,
-      ia, // 👈 novo campo
+      resultado_liquido
     } = req.body;
 
     const result = await pool.query(
       `INSERT INTO operacoes 
        (data, ativo, horario, tempo_vela, compra_venda, payout, trader,
-        entrada1, w_l1, entrada2, w_l2, entrada3, w_l3, corretora, ia)
+        entrada1, w_l1, entrada2, w_l2, entrada3, w_l3, corretora, resultado_liquido)
        VALUES ($1,$2,$3,$4,$5,$6,$7,
-               $8, NULLIF($9, ''), 
-               NULLIF($10, ''), NULLIF($11, ''), 
-               NULLIF($12, ''), NULLIF($13, ''), 
-               $14, $15)
+               $8,$9,
+               NULLIF($10::numeric, NULL), $11,
+               NULLIF($12::numeric, NULL), $13,
+               $14,$15)
        RETURNING *`,
       [
         data,
@@ -71,14 +71,14 @@ app.post("/api/operacoes", async (req, res) => {
         compra_venda,
         payout,
         trader,
-        entrada1 || null,
+        entrada1,  // 👈 obrigatório
         w_l1 || null,
-        entrada2 || null,
+        entrada2 || null, // 👈 vai virar NULL se vazio
         w_l2 || null,
-        entrada3 || null,
+        entrada3 || null, // 👈 idem
         w_l3 || null,
         corretora,
-        ia || null, // 👈 incluído no array
+        resultado_liquido || 0
       ]
     );
 
