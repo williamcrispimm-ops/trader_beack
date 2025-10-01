@@ -32,7 +32,6 @@ app.get("/api", (req, res) => {
   res.json({ status: "API funcionando 🚀" });
 });
 
-// --- Operações ---
 app.post("/api/operacoes", async (req, res) => {
   try {
     const {
@@ -49,19 +48,18 @@ app.post("/api/operacoes", async (req, res) => {
       w_l2,
       entrada3,
       w_l3,
-      corretora,
-      resultado_liquido
+      corretora
     } = req.body;
 
     const result = await pool.query(
       `INSERT INTO operacoes 
        (data, ativo, horario, tempo_vela, compra_venda, payout, trader,
-        entrada1, w_l1, entrada2, w_l2, entrada3, w_l3, corretora, resultado_liquido)
+        entrada1, w_l1, entrada2, w_l2, entrada3, w_l3, corretora)
        VALUES ($1,$2,$3,$4,$5,$6,$7,
                $8,$9,
-               NULLIF($10::numeric, NULL), $11,
-               NULLIF($12::numeric, NULL), $13,
-               $14,$15)
+               NULLIF($10,'')::numeric, $11,
+               NULLIF($12,'')::numeric, $13,
+               $14)
        RETURNING *`,
       [
         data,
@@ -71,14 +69,13 @@ app.post("/api/operacoes", async (req, res) => {
         compra_venda,
         payout,
         trader,
-        entrada1,  // 👈 obrigatório
+        entrada1,
         w_l1 || null,
-        entrada2 || null, // 👈 vai virar NULL se vazio
+        entrada2 || null,
         w_l2 || null,
-        entrada3 || null, // 👈 idem
+        entrada3 || null,
         w_l3 || null,
-        corretora,
-        resultado_liquido || 0
+        corretora
       ]
     );
 
@@ -88,7 +85,6 @@ app.post("/api/operacoes", async (req, res) => {
     res.status(500).json({ error: "Erro ao inserir operação" });
   }
 });
-
 
 // --- Caixa ---
 app.post("/api/caixa", async (req, res) => {
