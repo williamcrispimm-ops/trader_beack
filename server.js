@@ -91,7 +91,6 @@ app.post("/api/operacoes", async (req, res) => {
 
 
 // --- Caixa ---
-// --- Caixa ---
 app.post("/api/caixa", async (req, res) => {
   try {
     const { data, valor, tipo, corretora, bonus, valor_bonus } = req.body;
