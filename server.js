@@ -91,14 +91,18 @@ app.post("/api/operacoes", async (req, res) => {
 
 
 // --- Caixa ---
+// --- Caixa ---
 app.post("/api/caixa", async (req, res) => {
   try {
-    const { data, valor, tipo, corretora } = req.body;
+    const { data, valor, tipo, corretora, bonus, valor_bonus } = req.body;
+
+    // se for "sim", desconta o bônus; se não, valor_liquido = valor
+    const valorLiquido = bonus === "sim" ? (valor - (valor_bonus || 0)) : valor;
 
     const result = await pool.query(
-      `INSERT INTO caixa (data, valor, tipo, corretora)
-       VALUES ($1,$2,$3,$4) RETURNING *`,
-      [data, valor, tipo, corretora]
+      `INSERT INTO caixa (data, valor, tipo, corretora, bonus, valor_bonus, valor_liquido)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [data, valor, tipo, corretora, bonus, valor_bonus || 0, valorLiquido]
     );
 
     res.json({ success: true, data: result.rows[0] });
@@ -107,6 +111,7 @@ app.post("/api/caixa", async (req, res) => {
     res.status(500).json({ error: "Erro ao inserir movimentação de caixa" });
   }
 });
+
 
 // --- Metas ---
 app.post("/api/metas", async (req, res) => {
